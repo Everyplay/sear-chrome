@@ -108,7 +108,6 @@ SearChrome.prototype.onSwap = function (command, update, module, callback) {
     var resUrl = this.cleanUrl(res.url);
     if (module.replace(/\.js$/, '') === resUrl.replace(/\.js$/, '')) {
       // Updating resource content
-      logger.log(res.url + ', ' + module);
       res.setContent(command.source, true, callback);
     }
   }, this);
