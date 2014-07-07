@@ -1,0 +1,10 @@
+{
+  "name": "sear",
+  "version": "0.1",
+  "description": "Sear chrome developer tool (live uploading of resources)",
+  "devtools_page": "devtools.html",
+  "manifest_version": 2,
+  "permissions": [
+    "*://*/"
+  ]
+}
