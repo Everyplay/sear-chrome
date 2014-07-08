@@ -208,7 +208,7 @@
     define("/manifest.json", [ "require", "exports", "module" ], function(require, exports, module) {
         module.exports = {
             name: "sear",
-            version: "0.1",
+            version: "0.2",
             description: "Sear chrome developer tool (live uploading of resources)",
             devtools_page: "devtools.html",
             manifest_version: 2,
@@ -1497,6 +1497,7 @@
         var SearChrome = function() {
             var self = this;
             this.onMessage = this.onMessage.bind(this);
+            this._resourceAdded = this._resourceAdded.bind(this);
             this.liveUpdatePath(function(data) {
                 if (!data || !data.path) {
                     return;
@@ -1514,10 +1515,14 @@
             this.initConnection({
                 url: this.path
             });
+            chrome.devtools.network.onNavigated.addListener(function() {
+                this.resources = [];
+                this.initChromeFlag();
+                logger.log("Sear chrome plugin reinitialized");
+            }.bind(this));
         };
         SearChrome.prototype.initChromeFlag = function() {
             chrome.devtools.inspectedWindow.eval("window.sear_chrome = true;");
-            setTimeout(_.bind(this.initChromeFlag, this), 2e3);
         };
         SearChrome.prototype.liveUpdatePath = function(callback) {
             var self = this;
@@ -1529,10 +1534,13 @@
             var self = this;
             chrome.devtools.inspectedWindow.getResources(function(resources) {
                 self.resources = resources;
-                chrome.devtools.inspectedWindow.onResourceAdded.addListener(function(res) {
-                    self.resources.push(res);
-                });
+                chrome.devtools.inspectedWindow.onResourceAdded.addListener(self._resourceAdded);
             });
+        };
+        SearChrome.prototype._resourceAdded = function(res) {
+            if (res.url) {
+                this.resources.push(res);
+            }
         };
         SearChrome.prototype.initPanel = function() {
             var self = this;
@@ -1571,11 +1579,14 @@
             return url;
         };
         SearChrome.prototype.onSwap = function(command, update, module, callback) {
-            _.each(this.resources, function(res) {
+            _.find(this.resources, function(res) {
                 var resUrl = this.cleanUrl(res.url);
                 if (module.replace(/\.js$/, "") === resUrl.replace(/\.js$/, "")) {
                     // Updating resource content
                     res.setContent(command.source, true, callback);
+                    return true;
+                } else {
+                    return false;
                 }
             }, this);
         };
