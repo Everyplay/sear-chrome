@@ -1508,12 +1508,16 @@
             });
         };
         SearChrome.prototype.init = function() {
-            chrome.devtools.inspectedWindow.eval("window.sear_chrome = true;");
+            this.initChromeFlag();
             this.initResources();
             this.initPanel();
             this.initConnection({
                 url: this.path
             });
+        };
+        SearChrome.prototype.initChromeFlag = function() {
+            chrome.devtools.inspectedWindow.eval("window.sear_chrome = true;");
+            setTimeout(_.bind(this.initChromeFlag, this), 2e3);
         };
         SearChrome.prototype.liveUpdatePath = function(callback) {
             var self = this;
@@ -1571,7 +1575,6 @@
                 var resUrl = this.cleanUrl(res.url);
                 if (module.replace(/\.js$/, "") === resUrl.replace(/\.js$/, "")) {
                     // Updating resource content
-                    logger.log(res.url + ", " + module);
                     res.setContent(command.source, true, callback);
                 }
             }, this);

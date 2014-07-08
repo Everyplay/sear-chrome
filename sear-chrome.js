@@ -24,10 +24,16 @@ var SearChrome = function () {
 };
 
 SearChrome.prototype.init = function () {
-  chrome.devtools.inspectedWindow.eval('window.sear_chrome = true;');
+  this.initChromeFlag();
   this.initResources();
   this.initPanel();
   this.initConnection({url: this.path});
+};
+
+SearChrome.prototype.initChromeFlag = function () {
+  chrome.devtools.inspectedWindow.eval('window.sear_chrome = true;');
+  setTimeout(_.bind(this.initChromeFlag, this), 2000);
+  // TODO replace this with one that actually listen to browser events
 };
 
 SearChrome.prototype.liveUpdatePath = function (callback) {
