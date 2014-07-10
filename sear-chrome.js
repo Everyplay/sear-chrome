@@ -152,7 +152,7 @@ SearChrome.prototype.initConnection = function (options) {
   try {
     this.connection = new Connection(options);
     this.connection.on('message', this.onMessage);
-  } catch(e) {
+  } catch (e) {
     logger.log(e.message);
   }
 };
