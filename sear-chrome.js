@@ -1,3 +1,6 @@
+/* jshint evil: true */
+/* global chrome:true */
+
 'use strict';
 
 var Connection = require('./lib/connection');
@@ -124,6 +127,10 @@ SearChrome.prototype.onSwap = function (command, update, module, callback) {
     if (module.replace(/\.js$/, '') === resUrl.replace(/\.js$/, '')) {
       // Updating resource content
       res.setContent(command.source, true, callback);
+      chrome.devtools.inspectedWindow.eval('window.dispatchEvent(' +
+      'new CustomEvent("sear_update", {' +
+        'detail: "' + module + '"' +
+      '}));');
       return true;
     } else {
       return false;
