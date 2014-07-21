@@ -217,9 +217,11 @@
     })
     "lib/logger";
     define("/lib/logger", [ "require", "exports", "module" ], function(require, exports, module) {
+        /* jshint evil: true */
+        /* global chrome:true */
         "use strict";
         module.exports.log = function(msg) {
-            chrome.devtools.inspectedWindow.eval("console.log(" + JSON.stringify(msg) + ")", function() {});
+            chrome.devtools.inspectedWindow.eval("console.debug(" + JSON.stringify(msg) + ")", function() {});
         };
     })
     "bower_components/underscore/underscore";
@@ -1433,7 +1435,7 @@
         Connection.prototype.disconnect = function() {
             this._closed = true;
             this.ws.close();
-            this.listeners = [];
+            this.listeners = {};
         };
         Connection.prototype.send = function(data) {
             this.ws.send(JSON.stringify(data));
@@ -1497,31 +1499,49 @@
         var manifest = require("/manifest.json");
         var _ = require("/underscore");
         var SearChrome = function() {
-            var self = this;
+            this._initialized = false;
             this.onMessage = this.onMessage.bind(this);
             this._resourceAdded = this._resourceAdded.bind(this);
+            this._navigationListener = this._navigationListener.bind(this);
+            chrome.devtools.network.onNavigated.addListener(this._navigationListener);
+            this.init();
+        };
+        SearChrome.prototype._navigationListener = function() {
+            this.init();
+        };
+        SearChrome.prototype.init = function() {
+            var self = this;
+            this.initChromeFlag();
             this.liveUpdatePath(function(data) {
                 if (!data || !data.path) {
+                    setTimeout(function() {
+                        if (!self._initialized) {
+                            self.init();
+                        }
+                    }, 2e3);
                     return;
                 }
                 this.path = data.path;
                 this.root = data.root;
                 logger.log("Sear chrome plugin " + manifest.version);
-                this.init();
+                this.start();
             });
         };
-        SearChrome.prototype.init = function() {
-            this.initChromeFlag();
+        SearChrome.prototype.clean = function() {
+            if (this._initialized) {
+                this.resources = [];
+                chrome.devtools.inspectedWindow.onResourceAdded.removeListener(this._resourceAdded);
+                this._initialized = false;
+            }
+        };
+        SearChrome.prototype.start = function() {
+            this.clean();
             this.initResources();
             this.initPanel();
             this.initConnection({
                 url: this.path
             });
-            chrome.devtools.network.onNavigated.addListener(function() {
-                this.resources = [];
-                this.initChromeFlag();
-                logger.log("Sear chrome plugin reinitialized");
-            }.bind(this));
+            this._initialized = true;
         };
         SearChrome.prototype.initChromeFlag = function() {
             chrome.devtools.inspectedWindow.eval("window.sear_chrome = true;");
@@ -1540,19 +1560,18 @@
             });
         };
         SearChrome.prototype._resourceAdded = function(res) {
-            if (res.url) {
+            if (res.url && this.resources.indexOf(res) === -1) {
+                logger.log(this.resources.length + " " + res.url);
                 this.resources.push(res);
             }
         };
         SearChrome.prototype.initPanel = function() {
             var self = this;
-            chrome.devtools.panels.create("Sear", "", "config.html", function(panel) {
-                panel.onShown.addListener(function(panWin) {
-                    if (!panWin.visible) {
-                        self.panel = panWin;
-                        self.panel.visible = true;
-                    }
-                });
+            if (self.panel) {
+                return;
+            }
+            chrome.devtools.panels.create("Sear", "", "config/index.html", function(panel) {
+                self.panel = panel;
             });
         };
         SearChrome.prototype.onUpdate = function(update, module) {
@@ -1600,7 +1619,7 @@
         };
         SearChrome.prototype.initConnection = function(options) {
             if (this.connection) {
-                this.connection.close();
+                this.connection.disconnect();
             }
             try {
                 this.connection = new Connection(options);
