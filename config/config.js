@@ -1386,7 +1386,7 @@
         // an AMD load request. Those cases could generate an error when an
         // anonymous define() is called outside of a loader request.
         if (typeof define === "function" && define.amd) {
-            define("/underscore", [ "require", "exports", "module" ], function() {
+            define("/underscore/underscore", [ "require", "exports", "module" ], function() {
                 return _;
             });
         }
@@ -1396,7 +1396,7 @@
  * React v0.10.0
  */
     !function(e) {
-        if ("object" == typeof exports) module.exports = e(); else if ("function" == typeof define && define.amd) define("/react", [ "require", "exports", "module" ], e); else {
+        if ("object" == typeof exports) module.exports = e(); else if ("function" == typeof define && define.amd) define("/react/react", [ "require", "exports", "module" ], e); else {
             var f;
             "undefined" != typeof window ? f = window : "undefined" != typeof global ? f = global : "undefined" != typeof self && (f = self), 
             f.React = e();
@@ -16226,11 +16226,11 @@
         }, {}, [ 24 ])(24);
     });
     "config";
-    define("/config", [ "require", "exports", "module", "/react", "/underscore", "/bootstrap/less/bootstrap.less" ], function(require, exports, module) {
+    define("/config", [ "require", "exports", "module", "/react/react", "/underscore/underscore", "/bootstrap/less/bootstrap.less" ], function(require, exports, module) {
         /** @jsx React.DOM */
         // React
-        var React = require("/react");
-        var _ = require("/underscore");
+        var React = require("/react/react");
+        var _ = require("/underscore/underscore");
         var bootstrap = require("/bootstrap/less/bootstrap.less");
         document.head.appendChild(bootstrap);
         var Console = React.createClass({

@@ -1401,15 +1401,15 @@
         // an AMD load request. Those cases could generate an error when an
         // anonymous define() is called outside of a loader request.
         if (typeof define === "function" && define.amd) {
-            define("/underscore", [ "require", "exports", "module" ], function() {
+            define("/underscore/underscore", [ "require", "exports", "module" ], function() {
                 return _;
             });
         }
     }).call(this);
     "lib/connection";
-    define("/lib/connection", [ "require", "exports", "module", "/underscore", "/lib/logger" ], function(require, exports, module) {
+    define("/lib/connection", [ "require", "exports", "module", "/underscore/underscore", "/lib/logger" ], function(require, exports, module) {
         "use strict";
-        var _ = require("/underscore");
+        var _ = require("/underscore/underscore");
         var logger = require("/lib/logger");
         var Connection = module.exports = function(options) {
             this.options = options;
@@ -1490,14 +1490,14 @@
         };
     })
     "sear-chrome";
-    define("/sear-chrome", [ "require", "exports", "module", "/lib/connection", "/lib/logger", "/manifest.json", "/underscore" ], function(require, exports, module) {
+    define("/sear-chrome", [ "require", "exports", "module", "/lib/connection", "/lib/logger", "/manifest.json", "/underscore/underscore" ], function(require, exports, module) {
         /* jshint evil: true */
         /* global chrome:true */
         "use strict";
         var Connection = require("/lib/connection");
         var logger = require("/lib/logger");
         var manifest = require("/manifest.json");
-        var _ = require("/underscore");
+        var _ = require("/underscore/underscore");
         var SearChrome = function() {
             this._initialized = false;
             this.onMessage = this.onMessage.bind(this);
@@ -1560,8 +1560,7 @@
             });
         };
         SearChrome.prototype._resourceAdded = function(res) {
-            if (res.url && this.resources.indexOf(res) === -1) {
-                logger.log(this.resources.length + " " + res.url);
+            if (res.url) {
                 this.resources.push(res);
             }
         };
