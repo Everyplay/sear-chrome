@@ -118,7 +118,10 @@ SearChrome.prototype.onUpdate = function (update, module) {
       return;
     }
 
-    function cb() {
+    function cb(status) {
+      if (status && status.code !== 'OK') {
+        logger.log("Error: " + JSON.stringify(err));
+      }
       nextCommand(++i);
     }
 
@@ -144,11 +147,15 @@ SearChrome.prototype.onSwap = function (command, update, module, callback) {
     var resUrl = this.cleanUrl(res.url);
     if (module.replace(/\.js$/, '') === resUrl.replace(/\.js$/, '')) {
       // Updating resource content
-      res.setContent(command.source, true, callback);
-      chrome.devtools.inspectedWindow.eval('window.dispatchEvent(' +
-      'new CustomEvent("sear_update", {' +
-        'detail: "' + module + '"' +
-      '}));');
+      logger.log("Setting new content for " + module);
+      res.setContent(command.source, true, function (status) {
+        chrome.devtools.inspectedWindow.eval('window.dispatchEvent(' +
+        'new CustomEvent("sear_update", {' +
+          'detail: "' + module + '"' +
+        '}));', function() {
+          callback(status);
+        });
+      });
       return true;
     } else {
       return false;
